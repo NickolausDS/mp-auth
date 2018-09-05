@@ -99,14 +99,17 @@ class GlobusAuthentication(MultiproviderBaseAuthentication):
             user_association = UserAssociation.objects.get(provider=provider, uid=sub)
             user = user_association.user
         except UserAssociation.DoesNotExist:
-            fullname, firstname, lastname = self.get_user_names(name)
-            user = UserModel.objects.create(
-                    first_name=firstname,
-                    last_name=lastname,
-                    email=email,
-                    username=username,
-            )
-            logger.debug("New user '{}' created".format(user.username))
+            try:
+                user = UserModel.objects.get(username=username)
+            except UserModel.DoesNotExist:
+                fullname, firstname, lastname = self.get_user_names(name)
+                user = UserModel.objects.create(
+                        first_name=firstname,
+                        last_name=lastname,
+                        email=email,
+                        username=username,
+                )
+                logger.debug("New user '{}' created".format(user.username))
             user_association = UserAssociation.objects.create(
                     user=user, uid=sub, provider=provider)
             AccessToken.objects.create(
